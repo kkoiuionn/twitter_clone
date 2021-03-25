@@ -33,6 +33,7 @@ router = APIRouter(
 
 @router.get("/twits", response_model=List[TwitSerializer])
 async def get_twits():
+    """ Get all twits """
     return await TwitSerializer.from_queryset(Twit.all())
 
 
@@ -41,6 +42,7 @@ async def create_user(
     user: UserCreateSerializer,
     userService: UserService = Depends(),
 ):
+    """ Create new user with new credentials """
     new_user = await userService.create_user(user)
     return await UserSerializer.from_tortoise_orm(new_user)
 
@@ -52,6 +54,7 @@ async def get_current_user(
     Authorization: str = Header(None),
     userService: UserService = Depends(),
 ):
+    """ Get current user by jwt token provided """
     try:
         current_username = authorization.get_jwt_subject()
         authorization.jwt_required()
@@ -71,6 +74,7 @@ async def get_current_user(
 
 @router.get("/users", response_model=List[UserSerializer])
 async def get_users(username: Optional[str] = None):
+    """ Get all users or find by username """
     if username:
         return await UserSerializer.from_queryset(
             User.filter(username__contains=username)
@@ -85,6 +89,7 @@ async def login_user(
     userService: UserService = Depends(),
     authorize: AuthJWT = Depends(),
 ):
+    """ Get jwt access token with provided credentials """
     if await userService.login(user):
         access_token = authorize.create_access_token(subject=user.username)
         return {"access_token": access_token}
@@ -104,6 +109,7 @@ async def create_twit(
     userService: UserService = Depends(),
     Authorization: str = Header(None),
 ):
+    """ Creates new twit with author of jwt provided token """
     authorize.jwt_required()
     current_username = authorize.get_jwt_subject()
     current_user = await userService.get_user(username=current_username)

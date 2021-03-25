@@ -106,7 +106,7 @@ async def create_twit(
 ):
     authorize.jwt_required()
     current_username = authorize.get_jwt_subject()
-    current_user = userService.get_user(username=current_username)
+    current_user = await userService.get_user(username=current_username)
 
     new_twit = await twitService.create_twit(twit, current_user)
 

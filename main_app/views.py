@@ -47,7 +47,7 @@ async def create_user(
     return await UserSerializer.from_tortoise_orm(new_user)
 
 
-@router.get("/users/my")
+@router.get("/users/my", response_model=UserSerializer)
 async def get_current_user(
     request: Request,
     authorization: AuthJWT = Depends(),
@@ -83,7 +83,7 @@ async def get_users(username: Optional[str] = None):
     return await UserSerializer.from_queryset(User.all())
 
 
-@router.post("/users/login")
+@router.post("/users/login", response_model=UserSerializer)
 async def login_user(
     user: UserCreateSerializer,
     userService: UserService = Depends(),

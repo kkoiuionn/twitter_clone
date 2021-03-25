@@ -13,6 +13,7 @@ from services import UserService, TwitService
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
+from fastapi_jwt_auth.exceptions import JWTDecodeError
 
 
 class Config(BaseModel):
@@ -49,13 +50,23 @@ async def get_current_user(
     request: Request,
     authorization: AuthJWT = Depends(),
     Authorization: str = Header(None),
+    userService: UserService = Depends(),
 ):
-    authorization.jwt_required()
+    try:
+        current_username = authorization.get_jwt_subject()
+        authorization.jwt_required()
 
-    current_user = authorization.get_jwt_subject()
-    current_user = User.filter(username=current_user).first()
+        current_user = await userService.get_user(username=current_username)
 
-    return await UserSerializer.from_queryset_single(current_user)
+        return UserSerializer.from_orm(current_user)
+    except JWTDecodeError:
+        return JSONResponse(
+            {
+                "status": "Error",
+                "info": "Invalid or expired token",
+            },
+            status_code=400,
+        )
 
 
 @router.get("/users", response_model=List[UserSerializer])
@@ -90,13 +101,12 @@ async def create_twit(
     twit: TwitCreateSerializer,
     authorize: AuthJWT = Depends(),
     twitService: TwitService = Depends(),
-    Authorization: str = Header(
-        "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTYxNjU5NTg0NywibmJmIjoxNjE2NTk1ODQ3LCJqdGkiOiI2OWE1N2NkYi1jY2JjLTRlYTMtOTA0Zi1hMTNlMjUxOGNjNzIiLCJleHAiOjE2MTY1OTY3NDcsInR5cGUiOiJhY2Nlc3MiLCJmcmVzaCI6ZmFsc2V9.OANnrTBuNfcpjYj7-Mt1_wJEJLaOtY43lqUhFhd4UCk"
-    ),
+    userService: UserService = Depends(),
+    Authorization: str = Header(None),
 ):
     authorize.jwt_required()
-    current_user = authorize.get_jwt_subject()
-    print(current_user)
+    current_username = authorize.get_jwt_subject()
+    current_user = userService.get_user(username=current_username)
 
     new_twit = await twitService.create_twit(twit, current_user)
 

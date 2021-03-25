@@ -9,6 +9,7 @@ class TwitService:
         twit: TwitCreateSerializer,
         current_user: User,
     ):
+        """ Creates and returns new twit instance. Authorization: Bearer $TOKEN header required! """
         new_twit = await Twit.create(
             text=twit.text,
             author=current_user,
@@ -21,6 +22,7 @@ class UserService:
         self,
         user: UserCreateSerializer,
     ):
+        """ Creates and returns new user instance """
         new_user = await User.create(
             username=user.username,
             password=hashlib.sha256(user.password.encode()).hexdigest(),
@@ -31,8 +33,16 @@ class UserService:
         self,
         user: UserCreateSerializer,
     ):
+        """ Returns user if credentials are valid """
         logged_user = await User.filter(
             username=user.username,
             password=hashlib.sha256(user.password.encode()).hexdigest(),
         ).first()
         return logged_user
+
+    async def get_user(
+        self,
+        **kwargs,
+    ):
+        """ Returns user instance by kwargs """
+        return await User.filter(**kwargs).first()

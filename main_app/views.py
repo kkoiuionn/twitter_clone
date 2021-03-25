@@ -53,7 +53,7 @@ async def get_current_user(
     authorization.jwt_required()
 
     current_user = authorization.get_jwt_subject()
-    current_user = await User.filter(username=current_user).first()
+    current_user = User.filter(username=current_user).first()
 
     return await UserSerializer.from_queryset_single(current_user)
 

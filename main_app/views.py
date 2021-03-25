@@ -48,7 +48,7 @@ async def create_user(
 async def get_current_user(
     request: Request,
     authorization: AuthJWT = Depends(),
-    Authorization: str = Header(),
+    Authorization: str = Header(None),
 ):
     authorization.jwt_required()
 
